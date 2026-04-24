@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - Справочник дефектов (админка)</title>
+  <style>
+    :root {
+      --bg: #f3f5fa; --card: #fff; --line: #dce2ee; --text: #111827;
+      --muted: #6b7280; --dim: #9ca3af;
+      --primary: #2563eb; --primary-hover: #1d4ed8;
+      --soft: #eff6ff; --soft-border: #bfdbfe;
+      --green: #059669; --green-soft: #ecfdf5; --green-border: #a7f3d0;
+      --orange: #d97706; --orange-soft: #fffbeb; --orange-border: #fde68a;
+      --danger: #dc2626; --danger-soft: #fef2f2; --danger-border: #fecaca;
+      --radius: 12px; --radius-sm: 8px;
+      --ease: 180ms ease;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body { background: var(--bg); color: var(--text); font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
+
+    /* ── Header ── */
+    .header {
+      height: 52px; background: var(--card); border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 24px; padding: 0 20px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo { font-weight: 700; color: var(--primary); font-size: 15px; }
+    .tabs { display: flex; gap: 2px; height: 100%; }
+    .tab {
+      border: 0; background: none; padding: 0 14px; cursor: pointer;
+      color: var(--muted); font: inherit; font-weight: 600; font-size: 13px;
+      position: relative; transition: color var(--ease);
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--primary); }
+    .tab.active::after {
+      content: ''; position: absolute; bottom: 0; left: 8px; right: 8px;
+      height: 2px; background: var(--primary); border-radius: 2px 2px 0 0;
+    }
+    .tab .badge {
+      font-size: 10px; font-weight: 700; background: var(--soft); color: var(--primary);
+      border-radius: 999px; padding: 1px 6px; margin-left: 4px; vertical-align: middle;
+    }
+
+    /* ── Layout ── */
+    .screen { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 260px 1fr; gap: 14px; }
+    .screen.hidden { display: none; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+
+    /* ── Sidebar ── */
+    .side { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .side-title { font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: .4px; }
+    .side-search {
+      width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 7px 10px; font: inherit; font-size: 13px; outline: none; transition: border-color var(--ease);
+    }
+    .side-search:focus { border-color: var(--primary); }
+    .side-search::placeholder { color: var(--dim); }
+    .side-list { display: flex; flex-direction: column; gap: 4px; max-height: calc(100vh - 220px); overflow: auto; }
+    .side-list::-webkit-scrollbar { width: 4px; }
+    .side-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+    .side-item {
+      padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer;
+      border: 1px solid transparent; transition: all var(--ease);
+    }
+    .side-item:hover { background: #f9fafb; border-color: var(--line); }
+    .side-item.active { background: var(--soft); border-color: var(--soft-border); }
+    .side-item .name { font-weight: 600; font-size: 13px; }
+    .side-item .meta { font-size: 12px; color: var(--muted); }
+
+    /* ── Inline add ── */
+    .inline-add {
+      display: flex; gap: 6px; align-items: center;
+    }
+    .inline-add input {
+      flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 7px 10px; font: inherit; font-size: 13px; outline: none;
+    }
+    .inline-add input:focus { border-color: var(--primary); }
+    .inline-add input::placeholder { color: var(--dim); }
+
+    /* ── Main ── */
+    .main { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .main-title { font-size: 18px; font-weight: 700; }
+    .main-empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+    .main-head { display: flex; justify-content: space-between; align-items: center; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .breadcrumb .sep { color: var(--dim); }
+    .breadcrumb .current { color: var(--text); font-weight: 600; }
+
+    /* ── Fields ── */
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .field input, .field textarea, .field select {
+      border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px;
+      font: inherit; width: 100%; outline: none; transition: border-color var(--ease), box-shadow var(--ease);
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .field textarea { min-height: 56px; resize: vertical; }
+
+    /* ── Buttons ── */
+    .btn {
+      border: 1px solid var(--line); background: var(--card); border-radius: var(--radius-sm);
+      padding: 7px 12px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; transition: all var(--ease);
+    }
+    .btn:hover { background: #f9fafb; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+    .btn-danger { color: var(--danger); border-color: var(--danger-border); }
+    .btn-danger:hover { background: var(--danger-soft); }
+    .btn-row { display: flex; gap: 8px; align-items: center; }
+    .btn-link { background: none; border: none; color: var(--primary); cursor: pointer; font: inherit; font-size: 13px; font-weight: 600; padding: 0; }
+    .btn-link:hover { text-decoration: underline; }
+
+    /* ── Dirty indicator ── */
+    .dirty-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--orange);
+      display: inline-block; margin-right: 4px; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+    .save-wrap { display: flex; align-items: center; gap: 6px; }
+    .save-hint { font-size: 11px; color: var(--orange); font-weight: 600; }
+
+    /* ── Section ── */
+    .section-head {
+      font-size: 12px; text-transform: uppercase; color: var(--muted);
+      font-weight: 700; letter-spacing: .4px; padding-top: 4px;
+    }
+    .divider { height: 1px; background: var(--line); }
+
+    /* ── Collapsible section ── */
+    .collapsible-header {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+      user-select: none; padding: 6px 0;
+    }
+    .collapsible-header .arrow-icon {
+      width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+      color: var(--dim); transition: transform var(--ease); font-size: 12px;
+    }
+    .collapsible-header.open .arrow-icon { transform: rotate(90deg); }
+    .collapsible-body { display: none; }
+    .collapsible-header.open + .collapsible-body { display: block; }
+
+    /* ── Defect card (collapsible) ── */
+    .defect-card {
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      overflow: hidden; transition: border-color var(--ease);
+    }
+    .defect-card:hover { border-color: #d1d5db; }
+    .defect-head {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+      cursor: pointer; user-select: none;
+    }
+    .defect-head .num {
+      width: 24px; height: 24px; border-radius: 50%; background: var(--soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--primary); flex-shrink: 0;
+    }
+    .defect-head .title { flex: 1; font-weight: 600; font-size: 13px; }
+    .defect-head .norm-tag { font-size: 11px; color: var(--muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .defect-head .arrow {
+      width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+      color: var(--dim); transition: transform var(--ease);
+    }
+    .defect-card.open .defect-head .arrow { transform: rotate(180deg); }
+    .defect-body { display: none; padding: 12px; border-top: 1px solid var(--line); flex-direction: column; gap: 8px; background: #fafbfc; }
+    .defect-card.open .defect-body { display: flex; }
+    .defect-actions { display: flex; justify-content: flex-end; gap: 6px; padding-top: 4px; }
+
+    /* ── Chips (tag-input style) ── */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .chip-active {
+      display: inline-flex; align-items: center; gap: 4px;
+      border: 1px solid var(--soft-border); border-radius: 999px; padding: 4px 6px 4px 10px;
+      font-size: 12px; background: var(--soft); color: var(--primary); font-weight: 600;
+      user-select: none; transition: all var(--ease);
+    }
+    .chip-active .chip-x {
+      width: 16px; height: 16px; border-radius: 50%; border: none; background: rgba(37,99,235,.15);
+      color: var(--primary); cursor: pointer; font-size: 11px; display: flex; align-items: center;
+      justify-content: center; transition: all var(--ease); line-height: 1;
+    }
+    .chip-active .chip-x:hover { background: var(--primary); color: #fff; }
+    .chip-add-btn {
+      border: 1px dashed var(--line); border-radius: 999px; padding: 4px 10px;
+      font-size: 12px; cursor: pointer; background: var(--card); color: var(--muted);
+      user-select: none; transition: all var(--ease); position: relative;
+    }
+    .chip-add-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--soft); }
+
+    /* ── Dropdown for chip add ── */
+    .dropdown-anchor { position: relative; display: inline-block; }
+    .dropdown-menu {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 20;
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,.1); min-width: 200px; max-height: 220px;
+      overflow: auto; padding: 4px;
+    }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item {
+      padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background var(--ease);
+    }
+    .dropdown-item:hover { background: var(--soft); }
+    .dropdown-empty { padding: 8px 10px; color: var(--muted); font-size: 12px; text-align: center; }
+
+    /* ── Finish matrix ── */
+    .matrix { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+    .matrix-row { display: grid; grid-template-columns: 130px 1fr; border-bottom: 1px solid var(--line); }
+    .matrix-row:last-child { border-bottom: 0; }
+    .matrix-label {
+      padding: 10px 12px; font-weight: 600; font-size: 13px; background: #f9fafb;
+      border-right: 1px solid var(--line); display: flex; align-items: center; color: var(--muted);
+    }
+    .matrix-content { padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    /* ── Override table ── */
+    .override-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .override-table th { text-align: left; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 8px; border-bottom: 2px solid var(--line); }
+    .override-table td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .override-table tr:last-child td { border-bottom: 0; }
+    .override-table .issue-name { font-weight: 600; font-size: 13px; white-space: nowrap; }
+    .override-table .default-norm { font-size: 12px; color: var(--muted); }
+    .override-input {
+      border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+      font: inherit; font-size: 12px; width: 100%; outline: none; transition: all var(--ease);
+    }
+    .override-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,.1); }
+    .override-input.has-value { border-color: var(--orange-border); background: var(--orange-soft); }
+    .override-badge {
+      display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 999px; font-weight: 600; margin-left: 6px;
+    }
+    .override-badge.active { background: var(--orange-soft); color: var(--orange); border: 1px solid var(--orange-border); }
+    .override-badge.default { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-border); }
+
+    /* ── Preview ── */
+    .preview-box {
+      border: 2px solid var(--soft-border); border-radius: var(--radius-sm);
+      background: var(--soft); padding: 16px;
+    }
+    .preview-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; color: var(--primary); }
+    .preview-group { margin-bottom: 12px; }
+    .preview-group:last-child { margin-bottom: 0; }
+    .preview-group-name {
+      font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .3px;
+      color: var(--muted); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--soft-border);
+    }
+    .preview-issue { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; font-size: 13px; gap: 12px; }
+    .preview-issue .name { font-weight: 500; }
+    .preview-issue .norm { color: var(--muted); font-size: 12px; text-align: right; flex-shrink: 0; }
+    .preview-issue .norm.overridden { color: var(--orange); font-weight: 600; }
+    .preview-selectors { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .preview-selectors label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .preview-selectors select {
+      border: 1px solid var(--soft-border); border-radius: 6px; padding: 5px 8px;
+      font: inherit; font-size: 13px; font-weight: 600; background: #fff; outline: none;
+    }
+
+    /* ── Room block in standards (accordion) ── */
+    .room-block { margin-bottom: 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; transition: opacity var(--ease); }
+    .room-block-head {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+      background: #fafbfc; cursor: pointer; user-select: none;
+    }
+    .room-block-head .name { font-weight: 700; font-size: 14px; }
+    .room-block-head .count { font-size: 12px; color: var(--muted); margin-left: auto; }
+    .room-block-head .rb-arrow {
+      color: var(--dim); transition: transform var(--ease); font-size: 12px;
+    }
+    .room-block.rb-open .room-block-head .rb-arrow { transform: rotate(90deg); }
+    .room-block-body { display: none; border-top: 1px solid var(--line); }
+    .room-block.rb-open .room-block-body { display: block; }
+
+    /* Excluded rooms section */
+    .excluded-rooms { margin-top: 8px; }
+    .excluded-rooms-toggle {
+      font-size: 12px; color: var(--muted); cursor: pointer; user-select: none;
+      padding: 6px 0; font-weight: 600;
+    }
+    .excluded-rooms-toggle:hover { color: var(--primary); }
+    .excluded-list { display: none; margin-top: 6px; }
+    .excluded-list.show { display: flex; flex-wrap: wrap; gap: 6px; }
+    .excluded-chip {
+      border: 1px dashed var(--line); border-radius: 999px; padding: 4px 10px;
+      font-size: 12px; cursor: pointer; background: var(--card); color: var(--muted); transition: all var(--ease);
+    }
+    .excluded-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--soft); }
+
+    /* ── Tag ── */
+    .tag { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--line); color: var(--muted); }
+    .tag.blue { background: var(--soft); color: var(--primary); border: 1px solid var(--soft-border); }
+
+    /* ── Confirm modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3);
+      z-index: 50; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--card); border-radius: var(--radius); padding: 20px; max-width: 400px; width: 90%;
+      box-shadow: 0 12px 40px rgba(0,0,0,.15);
+    }
+    .modal-box h3 { font-size: 16px; margin-bottom: 8px; }
+    .modal-box p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .modal-box .btn-row { justify-content: flex-end; }
+
+    /* ── Toast ── */
+    .toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 6px; }
+    .toast {
+      padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+      color: #fff; box-shadow: 0 8px 20px rgba(0,0,0,.12);
+      animation: toastIn .2s ease, toastOut .2s ease 2s forwards;
+    }
+    .toast.ok { background: var(--green); }
+    @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+    @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-4px); } }
+
+    @media (max-width: 900px) { .screen { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">АктПро</div>
+    <nav class="tabs" id="nav"></nav>
+  </header>
+
+  <section id="s-defects" class="screen"></section>
+  <section id="s-rooms" class="screen hidden"></section>
+  <section id="s-standards" class="screen hidden"></section>
+  <div class="toast-wrap" id="toasts"></div>
+  <div class="modal-overlay" id="modal"></div>
+
+<script>
+// ── Данные ──
+const DB = {
+  finishTypes: ["Черновая", "Предчистовая", "Чистовая"],
+  roomCatalog: ["Комната", "Кухня", "Санузел", "Коридор", "Балкон", "Общее"],
+  issues: {
+    issue_no_power:    { shortTitle: "Нет электроснабжения",      fullTitle: "Отсутствует электроснабжение в помещении",               normativeDocs: "СП 256.1325800.2016" },
+    issue_no_water:    { shortTitle: "Нет водоснабжения",          fullTitle: "Отсутствует водоснабжение в помещении",                  normativeDocs: "СП 30.13330.2020" },
+    issue_no_vent:     { shortTitle: "Проблема вентиляции",        fullTitle: "Нарушена работа системы вентиляции",                     normativeDocs: "СП 60.13330.2020" },
+    issue_no_pressure: { shortTitle: "Нет давления",               fullTitle: "Отсутствует требуемое давление в системе водоснабжения",  normativeDocs: "СП 30.13330.2020" },
+    issue_bad_joints:  { shortTitle: "Неровные швы",               fullTitle: "Выявлена неравномерность межплиточных швов",              normativeDocs: "СП 71.13330.2017" },
+    issue_tile_chip:   { shortTitle: "Скол плитки",                fullTitle: "Обнаружены сколы на керамической плитке",                 normativeDocs: "ГОСТ 6141-91" },
+    issue_wall_crack:  { shortTitle: "Трещины на стенах",          fullTitle: "Обнаружены трещины на поверхности стен",                  normativeDocs: "СП 70.13330.2012" },
+    issue_wall_dev:    { shortTitle: "Отклонение плоскости",       fullTitle: "Отклонение поверхности стены от вертикали/плоскости",     normativeDocs: "СП 71.13330.2017" },
+    issue_floor_level: { shortTitle: "Перепад стяжки",             fullTitle: "Выявлен перепад уровня стяжки пола",                      normativeDocs: "СП 29.13330.2011" },
+    issue_socket:      { shortTitle: "Не работает розетка",        fullTitle: "Розетка не функционирует при проверке под нагрузкой",     normativeDocs: "ПУЭ, ГОСТ Р 50571" }
+  },
+  issueGroups: {
+    group_engineering_base: { name: "Базовый инженерный",  issues: ["issue_no_power", "issue_no_water", "issue_no_vent"] },
+    group_water_supply:     { name: "Водоснабжение",       issues: ["issue_no_pressure"] },
+    group_walls_tile:       { name: "Стены с плиткой",     issues: ["issue_bad_joints", "issue_tile_chip"] },
+    group_walls_plain:      { name: "Стены без отделки",   issues: ["issue_wall_crack", "issue_wall_dev"] },
+    group_floor:            { name: "Пол",                 issues: ["issue_floor_level"] },
+    group_electric:         { name: "Электрика",           issues: ["issue_socket"] }
+  },
+  standards: [
+    {
+      id: "std_pik", name: "ПИК Комфорт",
+      rooms: {
+        "Кухня":   { "Черновая": ["group_engineering_base","group_floor"], "Предчистовая": ["group_engineering_base","group_water_supply","group_walls_tile"], "Чистовая": ["group_engineering_base","group_walls_tile","group_electric"] },
+        "Комната": { "Черновая": ["group_engineering_base","group_floor"], "Предчистовая": ["group_engineering_base","group_walls_plain"], "Чистовая": ["group_engineering_base","group_electric"] },
+        "Санузел": { "Черновая": ["group_engineering_base"], "Предчистовая": ["group_water_supply","group_walls_tile"], "Чистовая": ["group_water_supply","group_walls_tile","group_electric"] }
+      },
+      issueOverrides: {
+        "issue_no_power":    { normativeDocs: "Внутренний стандарт ПИК + СП 256.1325800.2016" },
+        "issue_no_pressure": { normativeDocs: "СП 30.13330.2020 (ред. ПИК)" }
+      }
+    },
+    {
+      id: "std_samolet", name: "Самолет Стандарт",
+      rooms: {
+        "Комната": { "Черновая": ["group_engineering_base","group_walls_plain","group_floor"], "Предчистовая": ["group_engineering_base","group_walls_plain"], "Чистовая": ["group_engineering_base"] },
+        "Санузел": { "Черновая": ["group_engineering_base"], "Предчистовая": ["group_water_supply","group_walls_tile"], "Чистовая": ["group_water_supply","group_walls_tile"] }
+      },
+      issueOverrides: { "issue_wall_dev": { normativeDocs: "Внутренний регламент Самолет" } }
+    }
+  ]
+};
+
+// ── UI state ──
+const ui = {
+  selGroup: "group_engineering_base", selRoom: "Кухня", selStd: "std_pik",
+  previewRoom: "", previewFinish: "",
+  openIssues: new Set(), searchGroups: "", searchRooms: "",
+  openStdRooms: new Set(["Кухня"]),
+  showExcluded: false,
+  dirty: false, activeTab: "defects",
+  addGroupMode: false, addGroupVal: "",
+  addRoomMode: false, addRoomVal: "",
+  addIssueMode: false, addIssueVal: "",
+  openDropdown: null
+};
+
+const esc = v => String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function toast(msg) {
+  const el = document.createElement("div");
+  el.className = "toast ok";
+  el.textContent = msg;
+  document.getElementById("toasts").appendChild(el);
+  setTimeout(() => el.remove(), 2300);
+}
+
+function markDirty() { ui.dirty = true; updateDirtyIndicator(); }
+function markClean() { ui.dirty = false; updateDirtyIndicator(); }
+function updateDirtyIndicator() {
+  $$(".dirty-indicator").forEach(el => {
+    el.innerHTML = ui.dirty ? '<span class="dirty-dot"></span><span class="save-hint">Есть изменения</span>' : '';
+  });
+}
+
+function confirmAction(title, text, onOk) {
+  const modal = $("#modal");
+  modal.innerHTML = `<div class="modal-box">
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="btn-row">
+      <button class="btn" id="modal-cancel">Отмена</button>
+      <button class="btn btn-danger" id="modal-ok">Удалить</button>
+    </div>
+  </div>`;
+  modal.classList.add("show");
+  $("#modal-cancel").onclick = () => modal.classList.remove("show");
+  $("#modal-ok").onclick = () => { modal.classList.remove("show"); onOk(); };
+}
+
+// Close dropdowns on outside click.
+document.addEventListener("click", e => {
+  if (!e.target.closest(".dropdown-anchor")) {
+    $$(".dropdown-menu").forEach(d => d.classList.remove("show"));
+    ui.openDropdown = null;
+  }
+});
+
+// ── Tabs ──
+function renderTabs() {
+  const tabs = [
+    { id: "defects", label: "Дефекты", count: Object.keys(DB.issueGroups).length + " групп" },
+    { id: "rooms", label: "Помещения", count: DB.roomCatalog.length },
+    { id: "standards", label: "Стандарты", count: DB.standards.length }
+  ];
+  $("#nav").innerHTML = tabs.map(t =>
+    `<button class="tab ${t.id===ui.activeTab?"active":""}" data-tab="${t.id}">${t.label}<span class="badge">${t.count}</span></button>`
+  ).join("");
+  $$(".tab[data-tab]").forEach(btn => btn.onclick = () => switchTab(btn.dataset.tab));
+}
+
+function switchTab(tabId) {
+  ui.activeTab = tabId;
+  ["defects","rooms","standards"].forEach(n => $("#s-"+n).classList.toggle("hidden", n !== tabId));
+  renderTabs();
+}
+
+// ── Дефекты ──
+function renderDefects() {
+  const groupIds = Object.keys(DB.issueGroups);
+  const q = ui.searchGroups.toLowerCase();
+  const filtered = groupIds.filter(gid => !q || DB.issueGroups[gid].name.toLowerCase().includes(q));
+  const group = DB.issueGroups[ui.selGroup];
+
+  const sideItems = filtered.map(gid => {
+    const g = DB.issueGroups[gid];
+    return `<div class="side-item ${gid===ui.selGroup?"active":""}" data-gid="${gid}">
+      <div class="name">${esc(g.name)}</div>
+      <div class="meta">${g.issues.length} дефектов</div>
+    </div>`;
+  }).join("") || '<div style="padding:12px;color:var(--muted);font-size:13px;text-align:center">Ничего не найдено</div>';
+
+  const addGroupForm = ui.addGroupMode
+    ? `<div class="inline-add"><input id="new-group-input" placeholder="Название группы" autofocus /><button class="btn btn-primary btn-sm" id="confirm-add-group">OK</button><button class="btn btn-sm" id="cancel-add-group">✕</button></div>`
+    : `<button class="btn btn-sm" style="width:100%;border-style:dashed" id="start-add-group">+ Добавить группу</button>`;
+
+  let mainHtml;
+  if (!group) {
+    mainHtml = `<div class="main-empty">Выберите группу дефектов слева.</div>`;
+  } else {
+    const cards = group.issues.map((iid, idx) => {
+      const issue = DB.issues[iid]; if (!issue) return "";
+      const isOpen = ui.openIssues.has(iid);
+      return `<div class="defect-card ${isOpen?"open":""}">
+        <div class="defect-head" data-toggle="${iid}">
+          <span class="num">${idx+1}</span>
+          <span class="title">${esc(issue.shortTitle)}</span>
+          <span class="norm-tag">${esc(issue.normativeDocs)}</span>
+          <span class="arrow">&#9662;</span>
+        </div>
+        <div class="defect-body">
+          <div class="field"><label>Название в приложении</label><input value="${esc(issue.shortTitle)}" data-iid="${iid}" data-f="shortTitle" /></div>
+          <div class="field"><label>Название в отчёте</label><input value="${esc(issue.fullTitle)}" data-iid="${iid}" data-f="fullTitle" /></div>
+          <div class="field"><label>Нормативная документация</label><textarea data-iid="${iid}" data-f="normativeDocs">${esc(issue.normativeDocs)}</textarea></div>
+          <div class="defect-actions">
+            <button class="btn btn-sm btn-danger" data-del-issue="${iid}">Удалить дефект</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+
+    const addIssueForm = ui.addIssueMode
+      ? `<div class="inline-add" style="margin-top:6px"><input id="new-issue-input" placeholder="Название нового дефекта" autofocus /><button class="btn btn-primary btn-sm" id="confirm-add-issue">OK</button><button class="btn btn-sm" id="cancel-add-issue">✕</button></div>`
+      : `<button class="btn btn-sm" id="start-add-issue" style="margin-top:6px;border-style:dashed;width:100%">+ Добавить дефект</button>`;
+
+    mainHtml = `
+      <div class="breadcrumb"><span>Группы дефектов</span><span class="sep">›</span><span class="current">${esc(group.name)}</span></div>
+      <div class="main-head">
+        <div class="main-title">${esc(group.name)}</div>
+        <div class="save-wrap">
+          <span class="dirty-indicator"></span>
+          <button class="btn btn-primary" id="save-defects">Сохранить</button>
+        </div>
+      </div>
+      <p class="hint">Дефекты этой группы. Нормативная документация по умолчанию. Стандарт может переопределить нормативную документацию для конкретного застройщика.</p>
+      <div style="display:flex;flex-direction:column;gap:6px">${cards}</div>
+      ${addIssueForm}`;
+  }
+
+  $("#s-defects").innerHTML = `
+    <aside class="panel side">
+      <div class="side-title">Группы дефектов</div>
+      <input class="side-search" id="search-groups" placeholder="Поиск групп..." value="${esc(ui.searchGroups)}" />
+      <div class="side-list">${sideItems}</div>
+      ${addGroupForm}
+    </aside>
+    <main class="panel main">${mainHtml}</main>`;
+
+  updateDirtyIndicator();
+
+  $("#search-groups").oninput = e => { ui.searchGroups = e.target.value; renderDefects(); };
+  $$("[data-gid]").forEach(el => el.onclick = () => { ui.selGroup = el.dataset.gid; ui.openIssues.clear(); ui.addIssueMode = false; renderDefects(); });
+  $$("[data-toggle]").forEach(h => h.onclick = () => {
+    const id = h.dataset.toggle;
+    ui.openIssues.has(id) ? ui.openIssues.delete(id) : ui.openIssues.add(id);
+    renderDefects();
+  });
+
+  // Inline add group
+  const startAddGroup = $("#start-add-group");
+  if (startAddGroup) startAddGroup.onclick = () => { ui.addGroupMode = true; renderDefects(); };
+  const confirmAddGroup = $("#confirm-add-group");
+  if (confirmAddGroup) confirmAddGroup.onclick = () => {
+    const input = $("#new-group-input");
+    const name = input.value.trim();
+    if (!name) return;
+    const gid = "group_" + Math.random().toString(36).slice(2,7);
+    DB.issueGroups[gid] = { name, issues: [] };
+    ui.selGroup = gid; ui.addGroupMode = false; renderDefects(); renderTabs(); toast("Группа создана");
+  };
+  const cancelAddGroup = $("#cancel-add-group");
+  if (cancelAddGroup) cancelAddGroup.onclick = () => { ui.addGroupMode = false; renderDefects(); };
+  const newGroupInput = $("#new-group-input");
+  if (newGroupInput) { newGroupInput.focus(); newGroupInput.onkeydown = e => { if (e.key === "Enter") confirmAddGroup?.click(); if (e.key === "Escape") { ui.addGroupMode = false; renderDefects(); } }; }
+
+  // Inline add issue
+  const startAddIssue = $("#start-add-issue");
+  if (startAddIssue) startAddIssue.onclick = () => { ui.addIssueMode = true; renderDefects(); };
+  const confirmAddIssue = $("#confirm-add-issue");
+  if (confirmAddIssue && group) confirmAddIssue.onclick = () => {
+    const input = $("#new-issue-input");
+    const name = input.value.trim();
+    if (!name) return;
+    const iid = "issue_" + Math.random().toString(36).slice(2,7);
+    DB.issues[iid] = { shortTitle: name, fullTitle: "", normativeDocs: "" };
+    group.issues.push(iid);
+    ui.openIssues.add(iid);
+    ui.addIssueMode = false; markDirty(); renderDefects(); renderTabs();
+  };
+  const cancelAddIssue = $("#cancel-add-issue");
+  if (cancelAddIssue) cancelAddIssue.onclick = () => { ui.addIssueMode = false; renderDefects(); };
+  const newIssueInput = $("#new-issue-input");
+  if (newIssueInput) { newIssueInput.focus(); newIssueInput.onkeydown = e => { if (e.key === "Enter") confirmAddIssue?.click(); if (e.key === "Escape") { ui.addIssueMode = false; renderDefects(); } }; }
+
+  // Delete issue
+  $$("[data-del-issue]").forEach(btn => btn.onclick = () => {
+    const iid = btn.dataset.delIssue;
+    const issue = DB.issues[iid];
+    confirmAction("Удалить дефект?", `«${issue?.shortTitle || iid}» будет удалён из группы.`, () => {
+      group.issues.splice(group.issues.indexOf(iid), 1);
+      ui.openIssues.delete(iid);
+      markDirty(); renderDefects(); renderTabs();
+      toast("Дефект удалён");
+    });
+  });
+
+  // Track dirty on field changes
+  $$("[data-iid]").forEach(f => { f.oninput = () => markDirty(); });
+
+  const saveBtn = $("#save-defects");
+  if (saveBtn) saveBtn.onclick = () => {
+    $$("[data-iid]").forEach(f => {
+      const issue = DB.issues[f.dataset.iid];
+      if (issue) issue[f.dataset.f] = f.value.trim();
+    });
+    markClean(); renderDefects(); renderStandards(); toast("Сохранено");
+  };
+}
+
+// ── Помещения ──
+function renderRooms() {
+  const q = ui.searchRooms.toLowerCase();
+  const filtered = DB.roomCatalog.filter(n => !q || n.toLowerCase().includes(q));
+
+  const items = filtered.map(name => {
+    const stdCount = DB.standards.filter(s => s.rooms[name]).length;
+    return `<div class="side-item ${name===ui.selRoom?"active":""}" data-room="${esc(name)}">
+      <div class="name">${esc(name)}</div>
+      <div class="meta">${stdCount ? stdCount + " станд." : "не используется"}</div>
+    </div>`;
+  }).join("") || '<div style="padding:12px;color:var(--muted);font-size:13px;text-align:center">Ничего не найдено</div>';
+
+  const addRoomForm = ui.addRoomMode
+    ? `<div class="inline-add"><input id="new-room-input" placeholder="Название помещения" autofocus /><button class="btn btn-primary btn-sm" id="confirm-add-room">OK</button><button class="btn btn-sm" id="cancel-add-room">✕</button></div>`
+    : `<button class="btn btn-sm" style="width:100%;border-style:dashed" id="start-add-room">+ Добавить помещение</button>`;
+
+  const room = ui.selRoom;
+  let detailHtml;
+  if (!room) {
+    detailHtml = `<div class="main-empty">Выберите помещение слева.</div>`;
+  } else {
+    const stds = DB.standards.filter(s => s.rooms[room]);
+
+    const stdBlocks = stds.map(s => {
+      const finishes = Object.keys(s.rooms[room]);
+      const rows = finishes.map(f => {
+        const gids = s.rooms[room][f] || [];
+        const chips = gids.map(gid => `<span class="tag blue">${esc(DB.issueGroups[gid]?.name || gid)}</span>`).join(" ");
+        return `<div class="matrix-row">
+          <div class="matrix-label">${esc(f)}</div>
+          <div class="matrix-content">${chips || '<span class="hint">нет групп</span>'}</div>
+        </div>`;
+      }).join("");
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-weight:700">${esc(s.name)}</span>
+          <button class="btn-link" data-goto-std="${s.id}">Настроить →</button>
+        </div>
+        <div class="matrix">${rows}</div>
+      </div>`;
+    }).join("");
+
+    // Суммарная статистика: сколько групп и дефектов доступно через стандарты.
+    const allGroups = new Set();
+    const allIssues = new Set();
+    stds.forEach(s => {
+      Object.values(s.rooms[room] || {}).forEach(gids => {
+        gids.forEach(gid => {
+          allGroups.add(gid);
+          (DB.issueGroups[gid]?.issues || []).forEach(iid => allIssues.add(iid));
+        });
+      });
+    });
+
+    detailHtml = `
+      <div class="breadcrumb"><span>Справочник помещений</span><span class="sep">›</span><span class="current">${esc(room)}</span></div>
+      <div class="main-head">
+        <div class="main-title">${esc(room)}</div>
+        <button class="btn btn-sm btn-danger" id="del-room">Удалить</button>
+      </div>
+      <p class="hint">Помещение из общего справочника. Стандарт определяет, какие группы дефектов доступны.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="tag blue">${stds.length} стандартов</div>
+        <div class="tag blue">${allGroups.size} групп</div>
+        <div class="tag blue">${allIssues.size} дефектов</div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-head">Использование по стандартам</div>
+      ${stdBlocks || '<p class="hint">Помещение не включено ни в один стандарт.</p>'}`;
+  }
+
+  $("#s-rooms").innerHTML = `
+    <aside class="panel side">
+      <div class="side-title">Справочник помещений</div>
+      <input class="side-search" id="search-rooms" placeholder="Поиск помещений..." value="${esc(ui.searchRooms)}" />
+      <div class="side-list">${items}</div>
+      ${addRoomForm}
+    </aside>
+    <main class="panel main">${detailHtml}</main>`;
+
+  $("#search-rooms").oninput = e => { ui.searchRooms = e.target.value; renderRooms(); };
+  $$("[data-room]").forEach(el => el.onclick = () => { ui.selRoom = el.dataset.room; renderRooms(); });
+
+  // Quick link: go to standard from rooms tab.
+  $$("[data-goto-std]").forEach(btn => btn.onclick = () => {
+    ui.selStd = btn.dataset.gotoStd;
+    switchTab("standards");
+    renderStandards();
+  });
+
+  // Inline add room
+  const startAddRoom = $("#start-add-room");
+  if (startAddRoom) startAddRoom.onclick = () => { ui.addRoomMode = true; renderRooms(); };
+  const confirmAddRoom = $("#confirm-add-room");
+  if (confirmAddRoom) confirmAddRoom.onclick = () => {
+    const input = $("#new-room-input");
+    const name = input.value.trim();
+    if (!name || DB.roomCatalog.includes(name)) return;
+    DB.roomCatalog.push(name);
+    ui.addRoomMode = false; renderRooms(); renderTabs(); toast("Помещение добавлено");
+  };
+  const cancelAddRoom = $("#cancel-add-room");
+  if (cancelAddRoom) cancelAddRoom.onclick = () => { ui.addRoomMode = false; renderRooms(); };
+  const newRoomInput = $("#new-room-input");
+  if (newRoomInput) { newRoomInput.focus(); newRoomInput.onkeydown = e => { if (e.key === "Enter") confirmAddRoom?.click(); if (e.key === "Escape") { ui.addRoomMode = false; renderRooms(); } }; }
+
+  // Delete room
+  const delRoom = $("#del-room");
+  if (delRoom) delRoom.onclick = () => {
+    confirmAction("Удалить помещение?", `«${room}» будет удалено из справочника и из всех стандартов.`, () => {
+      DB.roomCatalog.splice(DB.roomCatalog.indexOf(room), 1);
+      DB.standards.forEach(s => delete s.rooms[room]);
+      ui.selRoom = DB.roomCatalog[0] || "";
+      renderRooms(); renderStandards(); renderTabs(); toast("Помещение удалено");
+    });
+  };
+}
+
+// ── Стандарты ──
+function renderStandards() {
+  const stdItems = DB.standards.map(s =>
+    `<div class="side-item ${s.id===ui.selStd?"active":""}" data-sid="${s.id}">
+      <div class="name">${esc(s.name)}</div>
+      <div class="meta">${Object.keys(s.rooms).length} помещ. · ${Object.keys(s.issueOverrides).length} переопр.</div>
+    </div>`
+  ).join("");
+
+  const std = DB.standards.find(s => s.id === ui.selStd);
+  let mainHtml;
+
+  if (!std) {
+    mainHtml = `<div class="main-empty">Выберите стандарт слева.</div>`;
+  } else {
+    const includedRooms = DB.roomCatalog.filter(r => std.rooms[r]);
+    const excludedRooms = DB.roomCatalog.filter(r => !std.rooms[r]);
+
+    // Included rooms as collapsible accordion blocks.
+    const roomBlocks = includedRooms.map(roomName => {
+      const roomData = std.rooms[roomName];
+      const totalGroups = Object.values(roomData).flat().length;
+      const isOpen = ui.openStdRooms.has(roomName);
+
+      const finishRows = DB.finishTypes.map(finish => {
+        const active = roomData[finish] || [];
+        const activeChips = active.map(gid =>
+          `<span class="chip-active">${esc(DB.issueGroups[gid]?.name || gid)}<button class="chip-x" data-rm-group data-room="${esc(roomName)}" data-finish="${esc(finish)}" data-group="${gid}">✕</button></span>`
+        ).join("");
+
+        const available = Object.keys(DB.issueGroups).filter(gid => !active.includes(gid));
+        const dropdownItems = available.length
+          ? available.map(gid => `<div class="dropdown-item" data-add-group data-room="${esc(roomName)}" data-finish="${esc(finish)}" data-group="${gid}">${esc(DB.issueGroups[gid].name)}</div>`).join("")
+          : '<div class="dropdown-empty">Все группы добавлены</div>';
+
+        return `<div class="matrix-row">
+          <div class="matrix-label">${esc(finish)}</div>
+          <div class="matrix-content">
+            <div class="chip-row">
+              ${activeChips}
+              <div class="dropdown-anchor">
+                <span class="chip-add-btn" data-open-dd="${esc(roomName)}-${esc(finish)}">+ группа</span>
+                <div class="dropdown-menu" id="dd-${esc(roomName)}-${esc(finish)}">${dropdownItems}</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+
+      return `<div class="room-block ${isOpen?"rb-open":""}">
+        <div class="room-block-head" data-rb-toggle="${esc(roomName)}">
+          <span class="rb-arrow">▶</span>
+          <span class="name">${esc(roomName)}</span>
+          <span class="count">${totalGroups} групп</span>
+        </div>
+        <div class="room-block-body"><div class="matrix">${finishRows}</div></div>
+      </div>`;
+    }).join("");
+
+    // Excluded rooms: compact chips to add.
+    const excludedHtml = excludedRooms.length ? `
+      <div class="excluded-rooms">
+        <div class="excluded-rooms-toggle" id="toggle-excluded">${ui.showExcluded ? "▾" : "▸"} Не в стандарте (${excludedRooms.length})</div>
+        <div class="excluded-list ${ui.showExcluded?"show":""}">
+          ${excludedRooms.map(r => `<span class="excluded-chip" data-include-room="${esc(r)}">+ ${esc(r)}</span>`).join("")}
+        </div>
+      </div>` : "";
+
+    // Overrides: collapsible section.
+    const allIssueIds = [...new Set(Object.values(std.rooms).flatMap(f => Object.values(f).flatMap(gs => gs.flatMap(gid => DB.issueGroups[gid]?.issues || []))))];
+    const overrideCount = Object.keys(std.issueOverrides).filter(k => allIssueIds.includes(k)).length;
+    const overrideRows = allIssueIds.map(iid => {
+      const issue = DB.issues[iid]; if (!issue) return "";
+      const ov = std.issueOverrides[iid];
+      const hasOv = !!ov;
+      return `<tr>
+        <td class="issue-name">${esc(issue.shortTitle)} ${hasOv ? '<span class="override-badge active">переопределено</span>' : '<span class="override-badge default">по умолчанию</span>'}</td>
+        <td class="default-norm">${esc(issue.normativeDocs)}</td>
+        <td><input class="override-input ${hasOv?"has-value":""}" data-override="${iid}" value="${esc(hasOv ? ov.normativeDocs : "")}" placeholder="как по умолчанию" /></td>
+      </tr>`;
+    }).join("");
+
+    // Preview.
+    const stdRoomNames = Object.keys(std.rooms);
+    if (!ui.previewRoom || !std.rooms[ui.previewRoom]) ui.previewRoom = stdRoomNames[0] || "";
+    if (!ui.previewFinish) ui.previewFinish = DB.finishTypes[0];
+
+    let previewContent = "";
+    if (ui.previewRoom && std.rooms[ui.previewRoom]) {
+      const gids = std.rooms[ui.previewRoom][ui.previewFinish] || [];
+      if (!gids.length) {
+        previewContent = '<div class="hint">Нет групп дефектов для этого сочетания.</div>';
+      } else {
+        previewContent = gids.map(gid => {
+          const g = DB.issueGroups[gid]; if (!g) return "";
+          const lines = g.issues.map(iid => {
+            const issue = DB.issues[iid]; if (!issue) return "";
+            const ov = std.issueOverrides[iid];
+            const norm = ov ? ov.normativeDocs : issue.normativeDocs;
+            return `<div class="preview-issue"><span class="name">${esc(issue.shortTitle)}</span><span class="norm ${ov?"overridden":""}">${esc(norm)}</span></div>`;
+          }).join("");
+          return `<div class="preview-group"><div class="preview-group-name">${esc(g.name)}</div>${lines}</div>`;
+        }).join("");
+      }
+    }
+
+    const roomOpts = stdRoomNames.map(r => `<option ${r===ui.previewRoom?"selected":""}>${esc(r)}</option>`).join("");
+    const finishOpts = DB.finishTypes.map(f => `<option ${f===ui.previewFinish?"selected":""}>${esc(f)}</option>`).join("");
+
+    mainHtml = `
+      <div class="breadcrumb"><span>Стандарты</span><span class="sep">›</span><span class="current">${esc(std.name)}</span></div>
+      <div class="main-head">
+        <div class="main-title">${esc(std.name)}</div>
+        <div class="save-wrap">
+          <span class="dirty-indicator"></span>
+          <button class="btn btn-primary" id="save-std">Сохранить</button>
+        </div>
+      </div>
+      <div class="field"><label>Название стандарта</label><input id="std-name-input" value="${esc(std.name)}" /></div>
+
+      <div class="divider"></div>
+      <div class="section-head">Помещения и группы дефектов</div>
+      <p class="hint">Раскройте помещение, чтобы назначить группы дефектов по типам отделки.</p>
+      ${roomBlocks}
+      ${excludedHtml}
+
+      <div class="divider"></div>
+      <div class="collapsible-header ${overrideCount > 0 ? "open" : ""}" data-collapsible="overrides">
+        <span class="arrow-icon">▶</span>
+        <span class="section-head" style="padding:0">Нормативная документация</span>
+        <span class="tag" style="margin-left:4px">${overrideCount} переопределений</span>
+      </div>
+      <div class="collapsible-body" ${overrideCount > 0 ? 'style="display:block"' : ""}>
+        <p class="hint" style="margin-bottom:8px">Укажите нормативную документацию, если она отличается от значения по умолчанию. Пустое поле = используется нормативная документация дефекта.</p>
+        ${allIssueIds.length ? `<table class="override-table"><thead><tr><th>Дефект</th><th>По умолчанию</th><th>В этом стандарте</th></tr></thead><tbody>${overrideRows}</tbody></table>` : '<div class="hint">Нет дефектов в этом стандарте.</div>'}
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-head">Предпросмотр: что увидит эксперт</div>
+      <div class="preview-selectors">
+        <label>Помещение</label><select id="preview-room">${roomOpts}</select>
+        <label>Отделка</label><select id="preview-finish">${finishOpts}</select>
+      </div>
+      <div class="preview-box">
+        <div class="preview-title">${esc(std.name)} → ${esc(ui.previewRoom)} → ${esc(ui.previewFinish)}</div>
+        ${previewContent}
+      </div>`;
+  }
+
+  $("#s-standards").innerHTML = `
+    <aside class="panel side">
+      <div class="side-title">Стандарты</div>
+      <div class="side-list">${stdItems}</div>
+      <button class="btn btn-sm" style="width:100%;border-style:dashed" id="add-std">+ Добавить стандарт</button>
+    </aside>
+    <main class="panel main">${mainHtml}</main>`;
+
+  updateDirtyIndicator();
+
+  // Standard selection
+  $$("[data-sid]").forEach(el => el.onclick = () => {
+    ui.selStd = el.dataset.sid; ui.previewRoom = ""; ui.previewFinish = DB.finishTypes[0];
+    ui.openStdRooms.clear(); ui.showExcluded = false;
+    const s = DB.standards.find(s => s.id === ui.selStd);
+    if (s) { const first = Object.keys(s.rooms)[0]; if (first) ui.openStdRooms.add(first); }
+    renderStandards();
+  });
+
+  // Room block accordion toggle
+  $$("[data-rb-toggle]").forEach(h => h.onclick = () => {
+    const rn = h.dataset.rbToggle;
+    ui.openStdRooms.has(rn) ? ui.openStdRooms.delete(rn) : ui.openStdRooms.add(rn);
+    renderStandards();
+  });
+
+  // Excluded rooms toggle
+  const toggleExcl = $("#toggle-excluded");
+  if (toggleExcl) toggleExcl.onclick = () => { ui.showExcluded = !ui.showExcluded; renderStandards(); };
+
+  // Include an excluded room
+  $$("[data-include-room]").forEach(chip => chip.onclick = () => {
+    const rn = chip.dataset.includeRoom;
+    std.rooms[rn] = {};
+    DB.finishTypes.forEach(f => std.rooms[rn][f] = []);
+    ui.openStdRooms.add(rn);
+    markDirty(); renderStandards();
+  });
+
+  // Dropdown: open
+  $$("[data-open-dd]").forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const ddId = "dd-" + btn.dataset.openDd;
+      const dd = document.getElementById(ddId);
+      const wasOpen = dd.classList.contains("show");
+      $$(".dropdown-menu").forEach(d => d.classList.remove("show"));
+      if (!wasOpen) dd.classList.add("show");
+    };
+  });
+
+  // Dropdown: add group
+  $$("[data-add-group]").forEach(item => item.onclick = () => {
+    const { room, finish, group } = item.dataset;
+    if (!std.rooms[room]) return;
+    if (!std.rooms[room][finish]) std.rooms[room][finish] = [];
+    std.rooms[room][finish].push(group);
+    markDirty(); renderStandards();
+  });
+
+  // Remove group from chip ×
+  $$("[data-rm-group]").forEach(btn => btn.onclick = e => {
+    e.stopPropagation();
+    const { room, finish, group } = btn.dataset;
+    if (!std.rooms[room]) return;
+    std.rooms[room][finish] = (std.rooms[room][finish] || []).filter(g => g !== group);
+    markDirty(); renderStandards();
+  });
+
+  // Collapsible section toggle
+  $$("[data-collapsible]").forEach(h => h.onclick = () => {
+    h.classList.toggle("open");
+    const body = h.nextElementSibling;
+    body.style.display = body.style.display === "block" ? "none" : "block";
+  });
+
+  // Preview selectors
+  const selR = $("#preview-room"), selF = $("#preview-finish");
+  if (selR) selR.onchange = () => { ui.previewRoom = selR.value; renderStandards(); };
+  if (selF) selF.onchange = () => { ui.previewFinish = selF.value; renderStandards(); };
+
+  // Track dirty on name and override changes
+  const nameInput = $("#std-name-input");
+  if (nameInput) nameInput.oninput = () => markDirty();
+  $$("[data-override]").forEach(inp => { inp.oninput = () => markDirty(); });
+
+  // Add standard
+  $("#add-std")?.addEventListener("click", () => {
+    const s = { id: "std_" + Math.random().toString(36).slice(2,7), name: "Новый стандарт", rooms: {}, issueOverrides: {} };
+    DB.standards.push(s); ui.selStd = s.id; ui.openStdRooms.clear(); ui.showExcluded = true;
+    renderStandards(); renderTabs(); toast("Стандарт создан");
+  });
+
+  // Save
+  const saveBtn = $("#save-std");
+  if (saveBtn) saveBtn.onclick = () => {
+    std.name = $("#std-name-input").value.trim() || std.name;
+    $$("[data-override]").forEach(inp => {
+      const val = inp.value.trim();
+      if (val) std.issueOverrides[inp.dataset.override] = { normativeDocs: val };
+      else delete std.issueOverrides[inp.dataset.override];
+    });
+    markClean(); renderStandards(); renderTabs(); toast("Стандарт сохранён");
+  };
+}
+
+renderTabs();
+renderDefects();
+renderRooms();
+renderStandards();
+</script>
+</body>
+</html>

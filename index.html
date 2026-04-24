@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - Публичные документы</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #d9dee7;
+      --text: #1f2328;
+      --muted: #5b6472;
+      --accent: #2d6df6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+    h1, h2, p { margin: 0; }
+    .hero {
+      margin-bottom: 24px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .hero h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    .hero p {
+      color: var(--muted);
+      max-width: 760px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      padding: 20px;
+      min-height: 170px;
+    }
+    .card:hover {
+      border-color: #bfd0f8;
+      box-shadow: 0 8px 24px rgba(24, 42, 84, 0.08);
+    }
+    .card h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .card p {
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .badge {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Публичные документы АктПро</h1>
+      <p>
+        Клиентский портал документов для просмотра продуктовой логики, макетов,
+        инфраструктурных материалов и статусов по проекту.
+      </p>
+    </section>
+
+    <section class="grid">
+      <a class="card" href="./product/index.html">
+        <h2>Продукт</h2>
+        <p>Документы по логике продукта, структуре справочников и сценариям работы.</p>
+        <span class="badge">Справочник дефектов</span>
+      </a>
+
+      <a class="card" href="./mockups/index.html">
+        <h2>Макеты</h2>
+        <p>Интерактивные демонстрационные материалы и ссылки на рабочие прототипы.</p>
+        <span class="badge">Админка каталога дефектов</span>
+      </a>
+
+      <a class="card" href="./infra/index.html">
+        <h2>Инфраструктура</h2>
+        <p>Публичные материалы по инфраструктуре, хранилищам и варианту запуска проекта.</p>
+        <span class="badge">Скоро</span>
+      </a>
+
+      <a class="card" href="./updates/index.html">
+        <h2>Обновления</h2>
+        <p>Короткие проектные обновления, roadmap и текущий статус работ для заказчика.</p>
+        <span class="badge">Скоро</span>
+      </a>
+    </section>
+  </div>
+</body>
+</html>
