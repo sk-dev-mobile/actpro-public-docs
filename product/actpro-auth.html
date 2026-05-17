@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - Доступ и роли</title>
+  <style>
+    :root {
+      --text: #1f2328;
+      --muted: #5b6472;
+      --line: #d9dee7;
+      --soft: #f5f7fb;
+      --accent: #2d6df6;
+      --warn: #8a5a00;
+      --warn-bg: #fff7e6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: #fff;
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 28px 56px;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 28px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-top: 18px;
+    }
+
+    p {
+      margin: 0 0 10px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .note {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--soft);
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .warn {
+      border: 1px solid #f1d08b;
+      border-radius: 10px;
+      background: var(--warn-bg);
+      color: var(--warn);
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .page {
+        max-width: none;
+        margin: 0;
+        padding: 12mm;
+      }
+      .card, .note, .warn, .mermaid {
+        break-inside: avoid;
+      }
+    }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "default",
+      securityLevel: "strict"
+    });
+  </script>
+</head>
+<body>
+  <div class="page">
+    <h1>Доступ и роли</h1>
+    <p class="muted">Схема входа и прав в АктПро.</p>
+
+    <div class="note">
+      <p><b>Цель:</b> простой вход и понятное разделение прав.</p>
+    </div>
+
+    <h2>Основа</h2>
+    <div class="card">
+      <p>В системе есть <b>Организация</b>.</p>
+      <p>Пользователь работает внутри своей организации и получает роль.</p>
+      <p>По правилам продукта пользователь относится к одной организации.</p>
+      <p>При необходимости это правило можно расширить позже.</p>
+    </div>
+
+    <h2>Роли</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Администратор</h3>
+        <p>Полный доступ внутри организации.</p>
+      </div>
+      <div class="card">
+        <h3>Менеджер</h3>
+        <p>Настраивает справочники, создает экспертов, выдает доступ, редактирует отчеты и заключения.</p>
+      </div>
+      <div class="card">
+        <h3>Эксперт</h3>
+        <p>Работает в приложении и заполняет акты.</p>
+      </div>
+    </div>
+    <div class="note">
+      <p><b>Дальше:</b> позже для эксперта можно открыть ограниченный доступ через браузер.</p>
+    </div>
+
+    <h2>Вход</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Администратор и менеджер</h3>
+        <p><b>Вход:</b> почта и пароль.</p>
+      </div>
+      <div class="card">
+        <h3>Эксперт</h3>
+        <p><b>Вход:</b> уникальный четырехзначный код.</p>
+        <p>После входа приложение сохраняет долгую сессию.</p>
+      </div>
+    </div>
+
+    <h2>Создание организации</h2>
+    <div class="card">
+      <p>Организация клиента создается вручную внутренним оператором системы.</p>
+      <p>Первый администратор также создается вручную.</p>
+      <p>Самостоятельной регистрации организации в первой версии нет.</p>
+    </div>
+
+    <h2>Почему вход разный</h2>
+    <div class="card">
+      <ul>
+        <li>администратор и менеджер работают в браузере;</li>
+        <li>эксперт работает в поле и должен входить быстро;</li>
+        <li>все остаются пользователями одной системы.</li>
+      </ul>
+    </div>
+
+    <h2>Схема</h2>
+    <div class="card">
+      <div class="mermaid">
+flowchart TD
+    organization[Организация]
+    user[Пользователь]
+    membership[Роль в организации]
+    adminManager[Администратор или менеджер]
+    expert[Эксперт]
+    browserAccess[Вход по почте]
+    codeAccess[Вход по коду]
+    app[Приложение]
+    longSession[Долгая сессия]
+
+    organization --> membership
+    user --> membership
+    membership --> adminManager
+    membership --> expert
+    adminManager --> browserAccess
+    expert --> codeAccess
+    codeAccess --> app
+    app --> longSession
+      </div>
+    </div>
+
+    <div class="note">
+      <p><b>Важно:</b> роль хранится внутри связи пользователя с организацией.</p>
+    </div>
+
+    <h2>Выдача кода эксперту</h2>
+    <div class="card">
+      <div class="mermaid">
+flowchart LR
+    manager[Менеджер]
+    createExpert[Создает эксперта]
+    generateCode[Система создает код]
+    showCode[Показывает код один раз]
+    expert[Эксперт]
+    app[Приложение]
+    session[Долгая сессия]
+
+    manager --> createExpert
+    createExpert --> generateCode
+    generateCode --> showCode
+    showCode --> expert
+    expert --> app
+    app --> session
+      </div>
+    </div>
+    <div class="card">
+      <ul>
+        <li>код создает система;</li>
+        <li>код выдает или перевыпускает менеджер;</li>
+        <li>менеджер видит код только в момент создания или перевыпуска;</li>
+        <li>позже старый код больше не показывается;</li>
+        <li>если нужен новый доступ, менеджер выпускает новый код.</li>
+      </ul>
+    </div>
+
+    <h2>Границы первой версии</h2>
+    <div class="card">
+      <ul>
+        <li>самостоятельной регистрации нет;</li>
+        <li>первая организация и первый администратор создаются управляемо;</li>
+        <li>эксперт работает только в приложении;</li>
+        <li>пользователь работает только в одной организации.</li>
+      </ul>
+    </div>
+
+    <h2>Защита</h2>
+    <div class="warn">
+      <p><b>Четырехзначный код удобен и требует дополнительных мер защиты.</b></p>
+    </div>
+    <div class="card">
+      <p>Для защиты доступа в системе предусмотрены базовые ограничения и контроль действий.</p>
+      <ul>
+        <li>ограничение числа попыток входа;</li>
+        <li>временная блокировка после ошибок;</li>
+        <li>хранение кода только в защищенном виде;</li>
+        <li>сброс кода менеджером;</li>
+        <li>отзыв активных сессий;</li>
+        <li>журнал входов и ошибок.</li>
+      </ul>
+    </div>
+
+    <h2>Зафиксировано</h2>
+    <div class="card">
+      <span class="pill">Организация</span>
+      <span class="pill">администратор</span>
+      <span class="pill">менеджер</span>
+      <span class="pill">эксперт</span>
+      <span class="pill">браузер для управления</span>
+      <span class="pill">приложение для эксперта</span>
+      <span class="pill">вход по коду</span>
+      <span class="pill">долгая сессия</span>
+      <span class="pill">ручное создание организации</span>
+      <span class="pill">код виден один раз</span>
+    </div>
+  </div>
+</body>
+</html>

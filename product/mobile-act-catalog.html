@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - Mobile Act Catalog</title>
+  <style>
+    :root {
+      --text: #1f2328;
+      --muted: #5b6472;
+      --line: #d9dee7;
+      --accent: #2d6df6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: #fff;
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 28px 56px;
+    }
+    .toplinks {
+      margin: 0 0 14px;
+      font-size: 14px;
+    }
+    .toplinks a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 12px;
+    }
+    h1, h2 {
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-top: 28px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+    p {
+      margin: 0 0 10px;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li {
+      margin: 6px 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .card, .code {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 12px;
+      background: #fff;
+    }
+    .code {
+      white-space: pre-wrap;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      background: #fcfdff;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="toplinks">
+      <a href="./mobile-index.html">Mobile API Scenarios</a>
+      <a href="./index.html">Продуктовые документы</a>
+      <a href="../index.html">Портал</a>
+    </div>
+
+    <h1>Каталог и структура акта</h1>
+    <p class="muted">Сценарий загрузки каталога для составления акта на устройстве и построения локального дерева помещение → группа → дефект.</p>
+
+    <h2>Что делает сценарий</h2>
+    <div class="card">
+      <p>1. Загружает <code>GET /api/v1/defects-reference/catalog</code>.</p>
+      <p>2. Собирает справочник комнат, групп, дефектов и стандартов.</p>
+      <p>3. Даёт mobile-клиенту все идентификаторы для последующего <code>POST /api/v1/acts</code>.</p>
+    </div>
+
+    <h2>Prerequisites</h2>
+    <div class="card">
+      <p>Нужен валидный access token эксперта, менеджера или администратора.</p>
+    </div>
+
+    <h2>Шаги</h2>
+    <div class="card">
+      <p>1. Один раз скачать каталог после авторизации.</p>
+      <p>2. Положить его в локальный storage как offline snapshot.</p>
+      <p>3. В UI подставлять названия комнат, групп и дефектов по глобальным массивам <code>rooms</code>, <code>groups</code> и <code>defects</code>.</p>
+      <p>4. Для конкретного стандарта использовать <code>standard_room_id</code> и <code>local_groups</code> как рабочую структуру выбора дефекта.</p>
+    </div>
+
+    <h2>Endpoints</h2>
+    <div class="card">
+      <p><b>GET /api/v1/defects-reference/catalog</b></p>
+      <p>Возвращает глобальные справочники и стандарты с помещениями, отделками, группами, override-основаниями и локальными группами.</p>
+    </div>
+
+    <h2>Request</h2>
+    <div class="code">curl -sS 'https://api.lgtime.ru/api/v1/defects-reference/catalog' \
+  -H 'Authorization: Bearer &lt;access_token&gt;'</div>
+
+    <h2>Response</h2>
+    <div class="code">{
+  "version": "2026-04-23T12:00:00Z",
+  "rooms": [
+    { "id": 5, "name": "Спальня" }
+  ],
+  "groups": [
+    { "id": 12, "name": "Стены", "defect_ids": [345, 346] }
+  ],
+  "defects": [
+    {
+      "id": 345,
+      "document_name": "Трещина",
+      "app_name": "Трещина",
+      "default_normative": "СП ..."
+    }
+  ],
+  "standards": [
+    {
+      "id": 3,
+      "name": "Базовый стандарт",
+      "is_archived": false,
+      "rooms": [
+        {
+          "standard_room_id": 101,
+          "room_id": 5,
+          "sort_order": 10,
+          "finishes": [
+            {
+              "finish_type": "finish",
+              "group_ids": [12],
+              "overrides": [],
+              "local_groups": [
+                { "group_id": 12, "defect_ids": [345] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}</div>
+
+    <h2>Ошибки</h2>
+    <div class="card">
+      <p><code>401</code> при отсутствии или истечении access token.</p>
+      <p><code>403</code> если роль пользователя не имеет доступа к каталогу.</p>
+    </div>
+
+    <h2>Edge cases</h2>
+    <div class="card">
+      <p><code>standard_room_id</code> — это не тип комнаты, а конкретная строка помещения внутри стандарта.</p>
+      <p><code>local_groups</code> содержит только <code>group_id</code> и <code>defect_ids</code>. Названия надо брать из верхнеуровневых <code>groups</code> и <code>defects</code>.</p>
+      <p><code>overrides</code> задаёт локальную нормативку на уровне пары <code>group_id + defect_id</code>.</p>
+    </div>
+
+    <h2>Что хранить локально</h2>
+    <div class="card">
+      <p>Полный ответ каталога и дату последней синхронизации. Этого достаточно для offline выбора дефектов и подготовки payload акта.</p>
+    </div>
+
+    <h2>Текущие ограничения</h2>
+    <div class="card">
+      <p>Для нового mobile-клиента предпочтителен разбор через <code>local_groups</code>. Поле <code>group_ids</code> стоит считать совместимым списком привязанных групп, а не полным составом локальной группы.</p>
+    </div>
+  </div>
+</body>
+</html>

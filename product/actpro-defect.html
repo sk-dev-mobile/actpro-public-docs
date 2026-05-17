@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - справочник дефектов</title>
+  <style>
+    :root {
+      --text: #1f2328;
+      --muted: #5b6472;
+      --line: #d9dee7;
+      --soft: #f5f7fb;
+      --accent: #2d6df6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: #fff;
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 28px 56px;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 28px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-top: 18px;
+    }
+
+    p {
+      margin: 0 0 10px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .note {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--soft);
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .code {
+      white-space: pre-wrap;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fcfdff;
+      padding: 14px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .page {
+        max-width: none;
+        margin: 0;
+        padding: 12mm;
+      }
+      .card, .note, .code, .mermaid {
+        break-inside: avoid;
+      }
+    }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "default",
+      securityLevel: "strict"
+    });
+  </script>
+</head>
+<body>
+  <div class="page">
+    <h1>Справочник дефектов</h1>
+
+    <h2>Суть модели</h2>
+    <div class="note">
+      <p>
+        Справочник строится не от отдельных дефектов и не от списка помещений сам по себе,
+        а от выбранного <b>стандарта</b>.
+      </p>
+      <p>
+        Базовая вложенность: <b>Стандарт -&gt; Помещение -&gt; Группа дефектов -&gt; Дефект</b>.
+      </p>
+      <p>
+        Тип отделки выступает как фильтр применимости и влияет на то, какие группы и дефекты
+        показываются эксперту.
+      </p>
+      <p>
+        <b>Помещения являются отдельным справочником</b>, а стандарт не создает помещения,
+        а определяет, какие группы и дефекты доступны внутри уже существующих помещений.
+      </p>
+    </div>
+
+    <h2>Сущности</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Объект</h3>
+        <p>Конкретный осмотр: квартира, апартамент или другой объект, по которому создаётся отчёт.</p>
+      </div>
+      <div class="card">
+        <h3>Справочник помещений</h3>
+        <p>Отдельный список доступных помещений: комната, кухня, санузел, коридор, балкон, общее и т.д.</p>
+      </div>
+      <div class="card">
+        <h3>Стандарт</h3>
+        <p>Шаблон под застройщика, класс жилья или сценарий: ПИК, Самолет, 5 класс, 6 класс и т.д. Определяет доступные группы и дефекты внутри помещений.</p>
+      </div>
+      <div class="card">
+        <h3>Помещение</h3>
+        <p>Конкретное помещение в объекте осмотра, выбранное из справочника помещений.</p>
+      </div>
+      <div class="card">
+        <h3>Отделка</h3>
+        <p>Черновая, предчистовая, чистовая. Используется как фильтр доступности групп и дефектов.</p>
+      </div>
+      <div class="card">
+        <h3>Группа дефектов</h3>
+        <p>Логический раздел внутри помещения: стены, потолок, пол, окно, дверь, электрика, водоснабжение.</p>
+      </div>
+      <div class="card">
+        <h3>Дефект</h3>
+        <p>Конкретная единица справочника с кратким названием, полным названием и нормативной документацией.</p>
+      </div>
+    </div>
+
+    <h2>Схема зависимостей</h2>
+    <div class="card">
+      <div class="mermaid">
+flowchart LR
+    roomCatalog[Справочник помещений]
+    standard[Стандарт]
+    room[Помещение]
+    finish[Отделка]
+    group[Группа дефектов]
+    issue[Дефект]
+
+    roomCatalog --> room
+    standard --> group
+    room --> group
+    finish --> group
+    group --> issue
+      </div>
+    </div>
+
+    <h2>Поток работы эксперта</h2>
+    <div class="card">
+      <div class="mermaid">
+flowchart TD
+    start[Начало отчета]
+    chooseStandard[Выбор стандарта]
+    chooseFinish[Выбор типа отделки]
+    openRoom[Открытие помещения]
+    openGroup[Открытие группы дефектов]
+    chooseIssue[Выбор дефекта]
+    saveReport[Сохранение в отчете]
+
+    start --> chooseStandard
+    chooseStandard --> chooseFinish
+    chooseFinish --> openRoom
+    openRoom --> openGroup
+    openGroup --> chooseIssue
+    chooseIssue --> saveReport
+      </div>
+    </div>
+
+    <h2>Как должен мыслиться стандарт</h2>
+    <div class="card">
+      <p>
+        Стандарт - это не список помещений. Помещения существуют отдельно, а стандарт определяет:
+      </p>
+      <ul>
+        <li>какие группы дефектов доступны внутри помещения;</li>
+        <li>какие конкретные дефекты входят в каждую группу;</li>
+        <li>какая нормативная документация привязана к дефектам;</li>
+        <li>какие элементы скрываются или показываются в зависимости от отделки.</li>
+      </ul>
+    </div>
+
+    <h2>Пример вложенности</h2>
+    <div class="card">
+      <p><b>Стандарт:</b> ПИК Комфорт</p>
+      <p><b>Помещение:</b> Кухня</p>
+      <p><b>Отделка:</b> Предчистовая</p>
+
+      <p><b>Группы дефектов:</b></p>
+      <ul>
+        <li>Базовый инженерный
+          <ul>
+            <li>Нет электроснабжения</li>
+            <li>Нет водоснабжения</li>
+          </ul>
+        </li>
+        <li>Водоснабжение
+          <ul>
+            <li>Нет давления</li>
+          </ul>
+        </li>
+        <li>Стены с плиткой
+          <ul>
+            <li>Неровные межплиточные швы</li>
+            <li>Скол плитки</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <h2>Что хранится у дефекта</h2>
+    <div class="card">
+      <span class="pill">Короткое название</span>
+      <span class="pill">Полное название</span>
+      <span class="pill">Нормативная документация</span>
+      <p style="margin-top:10px">
+        Короткое название нужно для интерфейса эксперта, полное название - для отчётов,
+        нормативка - для обоснования дефекта.
+      </p>
+      <p class="muted">
+        У дефекта есть базовая нормативная документация по умолчанию.
+      </p>
+    </div>
+
+    <h2>Как меняется нормативная документация по стандарту</h2>
+    <div class="card">
+      <p>
+        Сам <b>дефект</b> хранит базовые тексты и базовую нормативную документацию по умолчанию,
+        а <b>стандарт</b> хранит только переопределения, если нормативная документация должна
+        отличаться именно в рамках этого стандарта.
+      </p>
+      <p>
+        Один и тот же дефект может существовать в нескольких стандартах. Если переопределения нет,
+        используется нормативная документация по умолчанию из самого дефекта.
+      </p>
+      <p>
+        Пример: дефект <b>"Отклонение поверхности стены"</b> в стандарте одного застройщика
+        ссылается на один СП/ГОСТ, а в другом стандарте - на другой норматив или внутренний регламент.
+      </p>
+      <p>
+        Разная нормативная документация для одного и того же дефекта внутри одного стандарта
+        в зависимости от помещения или отделки не используется.
+      </p>
+    </div>
+
+    <h2>JSON контракт</h2>
+    <div class="code">{
+  // Общий справочник помещений.
+  "roomCatalog": [
+    "Комната",
+    "Кухня",
+    "Санузел",
+    "Коридор",
+    "Балкон",
+    "Общее"
+  ],
+
+  // Стандарт определяет структуру справочника под конкретный сценарий.
+  "standard": {
+    "name": "ПИК Комфорт",
+
+    // Вложенность: помещение -> отделка -> группы дефектов.
+    // Здесь перечисляются не все помещения в системе, а только доступность групп в рамках стандарта.
+    "rooms": {
+      "Кухня": {
+        "Предчистовая": [
+          "group_engineering_base",
+          "group_water_supply",
+          "group_walls_tile"
+        ]
+      }
+    },
+
+    // Переопределение нормативки только там, где она отличается от дефолтной.
+    "issueOverrides": {
+      "issue_no_power": {
+        "normativeDocs": "Внутренний стандарт ПИК + СП 256.1325800.2016"
+      },
+      "issue_no_pressure": {
+        "normativeDocs": "СП 30.13330.2020"
+      }
+    }
+  },
+
+  // Справочник групп дефектов.
+  "issueGroups": {
+    "group_engineering_base": {
+      "name": "Базовый инженерный",
+      "issues": ["issue_no_power", "issue_no_water"]
+    },
+    "group_water_supply": {
+      "name": "Водоснабжение",
+      "issues": ["issue_no_pressure"]
+    },
+    "group_walls_tile": {
+      "name": "Стены с плиткой",
+      "issues": ["issue_bad_joints", "issue_tile_chip"]
+    }
+  },
+
+  // Справочник дефектов.
+  "issues": {
+    "issue_no_power": {
+      "shortTitle": "Нет электроснабжения",
+      "fullTitle": "Отсутствует электроснабжение в помещении",
+      "normativeDocs": "СП 256.1325800.2016"
+    },
+    "issue_no_pressure": {
+      "shortTitle": "Нет давления",
+      "fullTitle": "Отсутствует требуемое давление в системе водоснабжения",
+      "normativeDocs": "СП 30.13330.2020"
+    }
+  }
+}</div>
+  </div>
+</body>
+</html>

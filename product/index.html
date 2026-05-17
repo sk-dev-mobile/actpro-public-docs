@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - Продуктовые документы</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #fff;
+      --line: #d9dee7;
+      --text: #1f2328;
+      --muted: #5b6472;
+      --accent: #2d6df6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+    .back {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    h1 {
+      margin: 10px 0 12px;
+      font-size: 30px;
+    }
+    p {
+      margin: 0 0 18px;
+      color: var(--muted);
+    }
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+    .doc {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+      padding: 16px;
+    }
+    .doc:hover {
+      border-color: #bfd0f8;
+      box-shadow: 0 8px 24px rgba(24, 42, 84, 0.08);
+    }
+    .doc h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .doc span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="../index.html">Назад к порталу</a>
+    <h1>Продуктовые документы</h1>
+    <p>Материалы по структуре продукта, справочникам и правилам работы системы.</p>
+
+    <div class="list">
+      <a class="doc" href="./stack-reference.html">
+        <h2>Стек и структура проекта</h2>
+        <span>Выбранный стек для web-панели, сервера, базы данных и базовая структура проекта.</span>
+      </a>
+
+      <a class="doc" href="./auth-reference.html">
+        <h2>Доступ и роли</h2>
+        <span>Организация, роли, вход и базовая защита доступа.</span>
+      </a>
+
+      <a class="doc" href="./mobile-index.html">
+        <h2>Mobile API Scenarios</h2>
+        <span>Короткие сценарии для mobile developer: вход, каталог, фото, отправка и просмотр актов.</span>
+      </a>
+
+      <a class="doc" href="./defects-reference.html">
+        <h2>Справочник дефектов</h2>
+        <span>Структура: стандарт, помещения, группы дефектов, дефекты и нормативная документация.</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

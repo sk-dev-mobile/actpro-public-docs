@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АктПро - Доступ и роли</title>
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --line: #d9dee7;
+      --text: #1f2328;
+      --muted: #5b6472;
+      --accent: #2d6df6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      margin-right: 12px;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    iframe {
+      width: 100%;
+      height: calc(100vh - 61px);
+      border: 0;
+      display: block;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="nav">
+      <a href="../index.html">Продукт</a>
+      <a href="../../index.html">Портал</a>
+      <a href="./actpro-auth.html" target="_blank" rel="noreferrer">Открыть отдельной страницей</a>
+    </div>
+    <div class="meta">Доступ и роли</div>
+  </div>
+  <iframe src="./actpro-auth.html" title="Доступ и роли"></iframe>
+</body>
+</html>
