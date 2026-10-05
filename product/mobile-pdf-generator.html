@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="../assets/favicon.ico" sizes="16x16 32x32 48x48" />
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png" />
+  <title>АктПро - PDF генератор (DTO и шаблоны)</title>
+  <style>
+    :root {
+      --text: #1f2328;
+      --muted: #5b6472;
+      --line: #d9dee7;
+      --accent: #2d6df6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: #fff;
+      font: 15px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    }
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 28px 56px;
+    }
+    .toplinks {
+      margin: 0 0 14px;
+      font-size: 14px;
+    }
+    .toplinks a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 12px;
+    }
+    h1, h2 {
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-top: 28px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+    p {
+      margin: 0 0 10px;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li {
+      margin: 6px 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 12px;
+      background: #fcfdff;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="toplinks">
+      <a href="./mobile-index.html">Mobile API Scenarios</a>
+      <a href="./index.html">Продуктовые документы</a>
+      <a href="../index.html">Портал</a>
+    </div>
+
+    <h1>PDF генератор: DTO и HTML</h1>
+    <p class="muted">Две точки, если мобильный клиент хочет совпасть с тем, что уходит в печать на сервере.</p>
+
+    <h2>1. Актуальный DTO для генератора</h2>
+    <div class="card">
+      <p>В монорепозитории продукта (ветка <code>main</code>):</p>
+      <ul>
+        <li>JSON Schema: <code>packages/act-render/schema/act-render-dto.schema.json</code></li>
+        <li>Текст по полям: <code>docs/mobile/act-render-dto.md</code></li>
+        <li>Pydantic-модели: <code>apps/backend/app/modules/acts/render/schemas.py</code></li>
+        <li>Сборка из сохранённого акта: <code>apps/backend/app/modules/acts/render/mapper.py</code></li>
+      </ul>
+      <p class="muted">Схема в репо, не на этом портале. Если доступа к git нет, попросите у команды выгрузку этих файлов.</p>
+    </div>
+
+    <h2>2. HTML шаблон генератора</h2>
+    <div class="card">
+      <p>Шаблоны, стили и шрифты общие у сервера и телефона: пакет <code>packages/act-render/</code> в том же репозитории.</p>
+      <ul>
+        <li>Шаблоны Mustache: <code>act-render-bundle/templates/</code> (<code>acceptance.mustache</code>, <code>expertise.mustache</code>, общие куски в <code>partials/</code>)</li>
+        <li>Стили: <code>act-render-bundle/styles/</code> (<code>common.css</code> плюс стили варианта)</li>
+        <li>Шрифты и параметры страницы: <code>act-render-bundle/manifest.json</code></li>
+      </ul>
+      <p>Как собирать HTML из пакета и с какими эталонами сверяться: <code>packages/act-render/README.md</code>. Свежий пакет можно получить без релиза приложения: <code>GET /api/v1/render-bundle?schema_version=2</code>.</p>
+    </div>
+  </div>
+</body>
+</html>
